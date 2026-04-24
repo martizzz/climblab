@@ -99,22 +99,6 @@ http://127.0.0.1:4173
 
 ---
 
-## Deploy
-
-### GitHub Pages
-
-1. Subir el proyecto a un repositorio
-2. Ir a Settings > Pages
-3. Seleccionar branch `main` y carpeta `/root`
-4. Acceder a la URL generada
-
-### Alternativas
-
-* Netlify
-* Vercel
-
----
-
 ## Limitaciones actuales
 
 * No hay backend
