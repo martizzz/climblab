@@ -1,10 +1,10 @@
-# 🎮 ClimbLab
+# ClimbLab
 
-**ClimbLab** es una web-app MVP para coaching de League of Legends que permite analizar partidas mediante vídeo, crear notas contextualizadas y navegar rápidamente por los momentos clave.
+ClimbLab es una web-app MVP para coaching de League of Legends que permite analizar partidas mediante vídeo, crear notas contextualizadas y navegar rápidamente por los momentos clave.
 
 ---
 
-## 🚀 Objetivo
+## Objetivo
 
 Facilitar sesiones de coaching más estructuradas entre jugador y coach, centrando la revisión en:
 
@@ -14,31 +14,31 @@ Facilitar sesiones de coaching más estructuradas entre jugador y coach, centran
 
 ---
 
-## 🧩 Funcionalidades principales
+## Funcionalidades principales
 
-### 🎥 Vídeo integrado
+### Vídeo integrado
 
 * Soporte para vídeos de YouTube
 * Reproducción embebida
 * Sincronización con la timeline
 
-### 📝 Sistema de notas
+### Sistema de notas
 
 Cada nota incluye:
 
 * Timestamp
 * Título
 * Categoría (Error, Acierto, Duda, Highlight)
-* Subcategoría (ej: laning, macro...)
+* Subcategoría (ej: laning, macro)
 * Descripción
 
-### ⏱️ Timeline interactiva
+### Timeline interactiva
 
 * Marcadores visuales en momentos clave
 * Navegación rápida al hacer click
 * Sincronización con el vídeo
 
-### 🎯 Contexto de sesión
+### Contexto de sesión
 
 * Campeón
 * Rol
@@ -46,14 +46,14 @@ Cada nota incluye:
 * Elo
 * Nombre de la sesión
 
-### 🔍 Filtros
+### Filtros
 
 * Filtrado por tipo de nota
 * Conteo dinámico
 
 ---
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 * HTML / CSS / JavaScript (vanilla)
 * YouTube Iframe API
@@ -62,29 +62,29 @@ Cada nota incluye:
 
 ---
 
-## 📦 Estructura del proyecto
+## Estructura del proyecto
 
 ```
-📦 climblab/
-├── index.html          # MVP principal (standalone)
-├── champions.js        # Lista de campeones
-├── server.js           # Servidor local opcional
-├── package.json        # Scripts y dependencias
-├── tailwind.config.js  # Configuración de estilos
-└── README.md           # Documentación
+climblab/
+├── index.html
+├── champions.js
+├── server.js
+├── package.json
+├── tailwind.config.js
+└── README.md
 ```
 
 ---
 
-## ▶️ Cómo usar
+## Uso
 
 ### Opción 1: Sin instalación
 
-1. Abre `index.html` en tu navegador
-2. Añade un enlace de YouTube
-3. Empieza a crear notas
+1. Abrir `index.html` en el navegador
+2. Añadir un enlace de YouTube
+3. Crear notas sobre la partida
 
-### Opción 2: Servidor local (recomendado)
+### Opción 2: Servidor local
 
 ```bash
 npm install
@@ -99,18 +99,14 @@ http://127.0.0.1:4173
 
 ---
 
-## 🌍 Deploy
+## Deploy
 
 ### GitHub Pages
 
 1. Subir el proyecto a un repositorio
-2. Ir a **Settings > Pages**
+2. Ir a Settings > Pages
 3. Seleccionar branch `main` y carpeta `/root`
-4. Acceder a:
-
-```
-https://tuusuario.github.io/nombre-repo
-```
+4. Acceder a la URL generada
 
 ### Alternativas
 
@@ -119,7 +115,7 @@ https://tuusuario.github.io/nombre-repo
 
 ---
 
-## ⚠️ Limitaciones actuales (MVP)
+## Limitaciones actuales
 
 * No hay backend
 * Las notas se guardan solo en el navegador
@@ -128,9 +124,9 @@ https://tuusuario.github.io/nombre-repo
 
 ---
 
-## 🧠 Próximos pasos
+## Próximos pasos
 
-* Guardado en base de datos
+* Persistencia en base de datos
 * Compartir sesiones
 * Colaboración en tiempo real
 * Exportación de notas
@@ -138,7 +134,7 @@ https://tuusuario.github.io/nombre-repo
 
 ---
 
-## 💡 Concepto clave
+## Concepto
 
 ClimbLab no almacena vídeos.
 
@@ -147,20 +143,10 @@ Se basa en un modelo híbrido:
 * Vídeo externo (YouTube)
 * Notas y análisis en la plataforma
 
-Esto permite:
-
-* Reducir costes
-* Escalar fácilmente
-* Centrarse en el valor del coaching
+Esto permite reducir costes, escalar fácilmente y centrarse en el valor del coaching.
 
 ---
 
-## 👤 Autor
-
-Proyecto MVP en desarrollo para validación de producto en coaching de League of Legends.
-
----
-
-## 📄 Licencia
+## Licencia
 
 Uso libre para desarrollo y experimentación.
