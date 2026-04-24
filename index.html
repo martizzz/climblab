@@ -81,68 +81,7 @@
     .shell {
       width: min(1380px, calc(100vw - 32px));
       margin: 0 auto;
-<<<<<<< HEAD
-      padding: 28px 0 48px;
-    }
-
-    .hero {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      padding: 28px;
-      background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(245, 248, 252, 0.96)),
-        var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -80px -80px auto;
-      width: 220px;
-      height: 220px;
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 70%);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(59, 130, 246, 0.08);
-      color: #2563eb;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
-    }
-
-    .hero-grid,
-    .layout {
-      display: grid;
-      gap: 24px;
-    }
-
-    .hero-grid {
-      grid-template-columns: 1.3fr 0.9fr;
-      align-items: end;
-      margin-top: 18px;
-=======
       padding: 18px 0 48px;
->>>>>>> a031f11 (Initial MVP)
     }
 
     h1,
@@ -153,28 +92,6 @@
       letter-spacing: -0.03em;
     }
 
-<<<<<<< HEAD
-    .hero-title {
-      max-width: 720px;
-      font-size: clamp(2.4rem, 6vw, 4.3rem);
-      line-height: 0.95;
-    }
-
-    .hero-copy {
-      margin: 18px 0 0;
-      max-width: 680px;
-      color: var(--muted);
-      font-size: 1.02rem;
-      line-height: 1.7;
-    }
-
-    .hero-stats {
-      display: grid;
-      gap: 12px;
-    }
-
-=======
->>>>>>> a031f11 (Initial MVP)
     .stat-card,
     .panel,
     .summary-card,
@@ -761,10 +678,6 @@
     }
 
     @media (max-width: 1120px) {
-<<<<<<< HEAD
-      .hero-grid,
-=======
->>>>>>> a031f11 (Initial MVP)
       .layout,
       .session-grid,
       .summary-grid {
@@ -782,10 +695,6 @@
         padding-top: 14px;
       }
 
-<<<<<<< HEAD
-      .hero,
-=======
->>>>>>> a031f11 (Initial MVP)
       .panel {
         padding: 18px;
       }
@@ -807,10 +716,6 @@
 </head>
 <body>
   <div class="shell">
-<<<<<<< HEAD
-    
-=======
->>>>>>> a031f11 (Initial MVP)
     <main class="layout">
       <section class="stack">
         <div id="sessionPanel" class="panel">
@@ -821,7 +726,7 @@
             </div>
             <button id="saveSummary" class="button button-secondary button-small">Guardar contexto</button>
           </div>
-
+          <div class="collapsible-body">
           <div class="session-grid">
             <div class="field">
               <label for="champion">Campeón</label>
@@ -862,6 +767,7 @@
                 <div class="session-placeholder"><span>Añade un nombre para esta sesión</span></div>
               </div>
             </div>
+          </div>
           </div>
         </div>
 
@@ -1087,6 +993,7 @@
       elo: document.getElementById("elo"),
       sessionName: document.getElementById("sessionName"),
     };
+    const saveSummaryButton = document.getElementById("saveSummary");
     const championOptionsList = document.getElementById("championOptions");
     const matchupOptionsList = document.getElementById("matchupOptions");
     const sessionNameWrap = document.getElementById("sessionNameWrap");
@@ -1094,6 +1001,7 @@
     const matchupSelect = document.getElementById("matchupSelect");
     const championToggle = document.getElementById("championToggle");
     const matchupToggle = document.getElementById("matchupToggle");
+    const sessionPanel = document.getElementById("sessionPanel");
 
     const youtubeUrlInput = document.getElementById("youtubeUrl");
     const categorySelect = document.getElementById("noteCategory");
@@ -1122,10 +1030,18 @@
     renderAll();
     loadChampionCatalog();
 
-    document.getElementById("saveSummary").addEventListener("click", () => {
+    saveSummaryButton.addEventListener("click", () => {
+      if (sessionPanel.classList.contains("collapsed")) {
+        sessionPanel.classList.remove("collapsed");
+        saveSummaryButton.textContent = "Guardar contexto";
+        return;
+      }
+
       state.summary = readSummaryInputs();
       saveState();
       renderSummary();
+      sessionPanel.classList.add("collapsed");
+      saveSummaryButton.textContent = "Editar contexto";
     });
 
     document.getElementById("loadVideo").addEventListener("click", loadVideoFromInput);
