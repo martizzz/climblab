@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClimbLab | MVP Coaching LoL</title>
+  <meta
+    name="description"
+    content="Plataforma MVP para revisar partidas de League of Legends con vídeo de YouTube, timeline interactivo y notas contextualizadas."
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #eef2f8;
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-strong: #ffffff;
+      --line: rgba(15, 23, 42, 0.08);
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.12);
+      --danger: #ff5d73;
+      --success: #5de3a5;
+      --warning: #ffd34d;
+      --info: #63a4ff;
+      --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Manrope", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 28%),
+        linear-gradient(180deg, #fafbfd 0%, #f3f6fb 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 90%);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+    }
+
+    .shell {
+      width: min(1380px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 28px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(245, 248, 252, 0.96)),
+        var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -80px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 70%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.08);
+      color: #2563eb;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .hero-grid,
+    .layout {
+      display: grid;
+      gap: 24px;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1.3fr 0.9fr;
+      align-items: end;
+      margin-top: 18px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-title {
+      max-width: 720px;
+      font-size: clamp(2.4rem, 6vw, 4.3rem);
+      line-height: 0.95;
+    }
+
+    .hero-copy {
+      margin: 18px 0 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.7;
+    }
+
+    .hero-stats {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stat-card,
+    .panel,
+    .summary-card,
+    .note-card,
+    .empty-state {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-card {
+      padding: 18px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .layout {
+      grid-template-columns: minmax(0, 1.5fr) minmax(360px, 0.9fr);
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .stack {
+      display: grid;
+      gap: 20px;
+    }
+
+    .panel {
+      padding: 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    #sessionPanel {
+      z-index: 30;
+    }
+
+    .collapsible-body {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel.collapsed .collapsible-body {
+      display: none;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+    }
+
+    .panel-subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .session-grid,
+    .input-row,
+    .summary-grid,
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .session-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .summary-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .input-row {
+      grid-template-columns: 1.2fr auto;
+      align-items: end;
+    }
+
+    .form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(163, 184, 218, 0.16);
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: rgba(90, 208, 255, 0.8);
+      background: rgba(255, 255, 255, 0.07);
+      transform: translateY(-1px);
+    }
+
+    .field textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    .search-select {
+      position: relative;
+      z-index: 40;
+    }
+
+    .search-select input {
+      padding-right: 44px;
+    }
+
+    .search-select-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: transparent;
+      color: #64748b;
+      transform: translateY(-50%);
+      z-index: 3;
+      font-size: 13px;
+      padding: 0;
+    }
+
+    .search-select-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: none;
+      padding: 8px;
+      border: 1px solid rgba(163, 184, 218, 0.2);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+    }
+
+    .search-select.open .search-select-menu {
+      display: block;
+    }
+
+    .search-select-list {
+      max-height: calc(5 * 44px + 16px);
+      overflow-y: auto;
+      display: grid;
+      gap: 4px;
+    }
+
+    .search-select-option {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      text-align: left;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.96rem;
+    }
+
+    .search-select-option:hover,
+    .search-select-option.active {
+      background: #eff6ff;
+      color: #0f172a;
+    }
+
+    .search-select-empty {
+      padding: 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .field:has(.search-select.open) {
+      z-index: 60;
+    }
+
+    .session-name-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+    }
+
+    .session-name-wrap input {
+      position: relative;
+      z-index: 2;
+      background: transparent;
+    }
+
+    .session-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      color: #94a3b8;
+      pointer-events: none;
+      overflow: hidden;
+      white-space: nowrap;
+      z-index: 1;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .session-placeholder span {
+      display: inline-block;
+      padding-right: 32px;
+      animation: marquee-left 10s linear infinite;
+    }
+
+    .session-name-wrap:focus-within .session-placeholder,
+    .session-name-wrap.has-value .session-placeholder {
+      opacity: 0;
+    }
+
+    @keyframes marquee-left {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-55%);
+      }
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, #111827, #334155);
+      color: #ffffff;
+    }
+
+    .button-secondary {
+      background: #f8fafc;
+      color: var(--text);
+      border: 1px solid rgba(163, 184, 218, 0.14);
+    }
+
+    .button-small {
+      padding: 10px 14px;
+      font-size: 0.92rem;
+    }
+
+    .video-shell {
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(241, 245, 249, 0.9)),
+        #ffffff;
+    }
+
+    .video-stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background:
+        radial-gradient(circle at center, rgba(59, 130, 246, 0.1), transparent 40%),
+        linear-gradient(180deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 1));
+    }
+
+    #player {
+      width: 100%;
+      height: 100%;
+    }
+
+    #player iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(248,250,252,0.85));
+    }
+
+    .video-placeholder strong {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text);
+      font-size: 1.4rem;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .timeline-wrap {
+      padding: 20px 20px 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .timeline-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .timeline {
+      position: relative;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: visible;
+      cursor: pointer;
+    }
+
+    .timeline-markers {
+      position: absolute;
+      inset: 0;
+    }
+
+    .timeline-progress {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0.65));
+    }
+
+    .timeline-head {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(59, 130, 246, 0.12);
+    }
+
+    .marker {
+      position: absolute;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.04);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .chip,
+    .legend-item,
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .legend-item {
+      background: #f8fafc;
+      color: var(--muted);
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .summary-card {
+      padding: 18px;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .summary-value {
+      margin-top: 10px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .chip {
+      background: #f8fafc;
+      color: var(--text);
+      border-color: rgba(163, 184, 218, 0.12);
+    }
+
+    .chip.active {
+      color: #0f172a;
+      background: #eff6ff;
+      border-color: rgba(90, 208, 255, 0.5);
+    }
+
+    .notes-list {
+      display: grid;
+      gap: 14px;
+      max-height: calc(100vh - 250px);
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .note-card {
+      padding: 16px;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .note-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(90, 208, 255, 0.22);
+    }
+
+    .note-card.active {
+      background: #f8fbff;
+      border-color: rgba(90, 208, 255, 0.4);
+    }
+
+    .note-top,
+    .note-actions,
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .note-top {
+      align-items: flex-start;
+    }
+
+    .note-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .note-title {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .note-timestamp {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .note-description {
+      margin: 14px 0;
+      color: #334155;
+      line-height: 1.65;
+      font-size: 0.96rem;
+    }
+
+    .note-actions {
+      flex-wrap: wrap;
+    }
+
+    .meta-pill {
+      background: #f8fafc;
+      color: #334155;
+      padding-inline: 10px;
+    }
+
+    .empty-state {
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .error {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 93, 115, 0.12);
+      border: 1px solid rgba(255, 93, 115, 0.25);
+      color: #ffc1cb;
+      display: none;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .status-bar {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.86rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1120px) {
+      .hero-grid,
+      .layout,
+      .session-grid,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .notes-list {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100vw - 20px, 100%);
+        padding-top: 14px;
+      }
+
+      .hero,
+      .panel {
+        padding: 18px;
+      }
+
+      .input-row,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-meta,
+      .note-top,
+      .note-actions,
+      .status-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <span class="eyebrow">MVP de coaching para League of Legends</span>
+      <div class="hero-grid">
+        <div>
+          <h1 class="hero-title">Analiza una partida, detecta patrones y acelera el aprendizaje.</h1>
+          <p class="hero-copy">
+            ClimbLab estructura la revisión entre coach y jugador alrededor del vídeo, con notas
+            contextualizadas, marcadores visuales y una timeline interactiva para navegar rápido por los
+            momentos que realmente importan.
+          </p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div class="stat-label">Flujo principal</div>
+            <div class="stat-value">Vídeo + Notas + Timeline</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Validación MVP</div>
+            <div class="stat-value">Coach y jugador alineados sobre situaciones reales</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="stack">
+        <div id="sessionPanel" class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Resumen de sesión</h2>
+              <p class="panel-subtitle">Contexto general de la partida para que cada revisión tenga marco competitivo.</p>
+            </div>
+            <button id="saveSummary" class="button button-secondary button-small">Guardar contexto</button>
+          </div>
+
+          <div class="session-grid">
+            <div class="field">
+              <label for="champion">Campeón</label>
+              <div id="championSelect" class="search-select">
+                <input id="champion" type="text" placeholder="Busca el campeón" autocomplete="off" />
+                <button id="championToggle" type="button" class="search-select-toggle" aria-label="Mostrar campeones">▼</button>
+                <div class="search-select-menu">
+                  <div id="championOptions" class="search-select-list"></div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="role">Rol</label>
+              <select id="role">
+                <option value="">Selecciona un rol</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="matchup">Matchup</label>
+              <div id="matchupSelect" class="search-select">
+                <input id="matchup" type="text" placeholder="Busca o selecciona un campeón rival" autocomplete="off" />
+                <button id="matchupToggle" type="button" class="search-select-toggle" aria-label="Mostrar matchups">▼</button>
+                <div class="search-select-menu">
+                  <div id="matchupOptions" class="search-select-list"></div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="elo">Elo</label>
+              <select id="elo">
+                <option value="">Selecciona un elo</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sessionName">Sesión</label>
+              <div id="sessionNameWrap" class="session-name-wrap">
+                <input id="sessionName" type="text" autocomplete="off" />
+                <div class="session-placeholder"><span>Añade un nombre para esta sesión</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Vídeo principal</h2>
+              <p class="panel-subtitle">Carga un link de YouTube embebible y sincroniza la revisión con la timeline.</p>
+            </div>
+          </div>
+
+      <div class="input-row">
+            <div class="field">
+              <label for="youtubeUrl">Link de YouTube</label>
+              <input
+                id="youtubeUrl"
+                type="text"
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </div>
+            <button id="loadVideo" class="button button-primary">Cargar vídeo</button>
+          </div>
+
+          <div id="errorBox" class="error"></div>
+          <p id="videoHint" class="helper" style="margin: 12px 2px 0;"></p>
+
+          <div class="video-shell" style="margin-top: 18px;">
+            <div class="video-stage">
+              <div id="player"></div>
+              <div id="videoPlaceholder" class="video-placeholder">
+                <div>
+                  <strong>Todo gira alrededor de la revisión contextual.</strong>
+                  Pega un enlace de YouTube para empezar a tomar notas sobre decisiones, errores,
+                  aciertos, dudas y highlights de la partida.
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-wrap">
+              <div class="timeline-meta">
+                <span id="currentTime">00:00</span>
+                <span>Timeline interactiva sincronizada con el vídeo y las notas</span>
+                <span id="duration">00:00</span>
+              </div>
+              <div id="timeline" class="timeline">
+                <div id="timelineProgress" class="timeline-progress"></div>
+                <div id="timelineHead" class="timeline-head"></div>
+                <div id="timelineMarkers" class="timeline-markers"></div>
+              </div>
+              <div class="legend" id="legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Resumen visible para la sesión</h2>
+              <p class="panel-subtitle">Lo que verá el coach para entender rápidamente el contexto de la review.</p>
+            </div>
+          </div>
+          <div class="summary-grid" id="summaryGrid"></div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Nueva nota</h2>
+              <p class="panel-subtitle">Documenta el momento clave y enlázalo con un click al vídeo.</p>
+            </div>
+            <button id="captureNow" class="button button-secondary button-small">Usar tiempo actual</button>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="noteCategory">Categoría</label>
+              <select id="noteCategory"></select>
+            </div>
+            <div class="field">
+              <label for="noteTimestamp">Timestamp</label>
+              <input id="noteTimestamp" type="text" placeholder="12:34" />
+            </div>
+            <div class="field">
+              <label for="noteTitle">Título</label>
+              <input id="noteTitle" type="text" placeholder="Describe el momento clave" />
+            </div>
+            <div class="field">
+              <label for="noteTag">Subcategoría</label>
+              <input id="noteTag" type="text" placeholder="Laning, macro, teamfight..." />
+            </div>
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <label for="noteDescription">Descripción</label>
+            <textarea
+              id="noteDescription"
+              placeholder="Explica qué ocurrió, por qué importa y cuál sería la decisión ideal."
+            ></textarea>
+          </div>
+
+          <div class="status-bar">
+            <span>Las notas se guardan en tu navegador para esta demo.</span>
+            <button id="addNote" class="button button-primary button-small">Añadir nota</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Momentos clave</h2>
+              <p class="panel-subtitle">Filtra eventos y salta de inmediato al momento correcto de la partida.</p>
+            </div>
+            <span id="noteCount" class="meta-pill">0 notas</span>
+          </div>
+
+          <div class="toolbar" id="filters"></div>
+          <div id="notesList" class="notes-list"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/champions.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    const STORAGE_KEY = "climblab-mvp-state-clean-demo";
+    const FILE_MODE = window.location.protocol === "file:";
+
+    const categories = {
+      error: {
+        label: "Error",
+        color: "var(--danger)",
+        soft: "rgba(255, 93, 115, 0.12)",
+        text: "#ff96a5",
+      },
+      success: {
+        label: "Acierto",
+        color: "var(--success)",
+        soft: "rgba(93, 227, 165, 0.12)",
+        text: "#86f0be",
+      },
+      doubt: {
+        label: "Duda",
+        color: "var(--warning)",
+        soft: "rgba(255, 211, 77, 0.14)",
+        text: "#ffe387",
+      },
+      highlight: {
+        label: "Highlight",
+        color: "var(--info)",
+        soft: "rgba(99, 164, 255, 0.14)",
+        text: "#9ec3ff",
+      },
+    };
+
+    const roleOptions = ["Top", "Jungle", "Mid", "Adc", "Support"];
+    const eloOptions = [
+      "Iron IV",
+      "Iron III",
+      "Iron II",
+      "Iron I",
+      "Bronze IV",
+      "Bronze III",
+      "Bronze II",
+      "Bronze I",
+      "Silver IV",
+      "Silver III",
+      "Silver II",
+      "Silver I",
+      "Gold IV",
+      "Gold III",
+      "Gold II",
+      "Gold I",
+      "Platinum IV",
+      "Platinum III",
+      "Platinum II",
+      "Platinum I",
+      "Emerald IV",
+      "Emerald III",
+      "Emerald II",
+      "Emerald I",
+      "Diamond IV",
+      "Diamond III",
+      "Diamond II",
+      "Diamond I",
+      "Master",
+      "Grandmaster",
+      "Challenger",
+    ];
+    const LOCAL_CHAMPION_OPTIONS = Array.isArray(window.CHAMPION_OPTIONS) ? window.CHAMPION_OPTIONS : [];
+    const RIOT_VERSIONS_URL = "https://ddragon.leagueoflegends.com/api/versions.json";
+
+    const defaultState = {
+      videoId: "",
+      youtubeUrl: "",
+      filter: "all",
+      summary: {
+        champion: "",
+        role: "",
+        matchup: "",
+        elo: "",
+        sessionName: "",
+      },
+      notes: [],
+    };
+
+    let state = loadState();
+    let player = null;
+    let currentTime = 0;
+    let duration = 0;
+    let playerReady = false;
+    let embedMode = FILE_MODE ? "file-blocked" : "api";
+    let noteTimestampTouched = false;
+    let championCatalog = [];
+    let championCatalogStatus = "loading";
+
+    const summaryFields = {
+      champion: document.getElementById("champion"),
+      role: document.getElementById("role"),
+      matchup: document.getElementById("matchup"),
+      elo: document.getElementById("elo"),
+      sessionName: document.getElementById("sessionName"),
+    };
+    const championOptionsList = document.getElementById("championOptions");
+    const matchupOptionsList = document.getElementById("matchupOptions");
+    const sessionNameWrap = document.getElementById("sessionNameWrap");
+    const championSelect = document.getElementById("championSelect");
+    const matchupSelect = document.getElementById("matchupSelect");
+    const championToggle = document.getElementById("championToggle");
+    const matchupToggle = document.getElementById("matchupToggle");
+
+    const youtubeUrlInput = document.getElementById("youtubeUrl");
+    const categorySelect = document.getElementById("noteCategory");
+    const noteTimestamp = document.getElementById("noteTimestamp");
+    const noteTitle = document.getElementById("noteTitle");
+    const noteTag = document.getElementById("noteTag");
+    const noteDescription = document.getElementById("noteDescription");
+    const notesList = document.getElementById("notesList");
+    const filters = document.getElementById("filters");
+    const noteCount = document.getElementById("noteCount");
+    const summaryGrid = document.getElementById("summaryGrid");
+    const timeline = document.getElementById("timeline");
+    const timelineMarkers = document.getElementById("timelineMarkers");
+    const timelineProgress = document.getElementById("timelineProgress");
+    const timelineHead = document.getElementById("timelineHead");
+    const currentTimeLabel = document.getElementById("currentTime");
+    const durationLabel = document.getElementById("duration");
+    const errorBox = document.getElementById("errorBox");
+    const videoPlaceholder = document.getElementById("videoPlaceholder");
+    const legend = document.getElementById("legend");
+    const videoHint = document.getElementById("videoHint");
+
+    seedSummaryOptions();
+    seedCategoryOptions();
+    syncInputsFromState();
+    renderAll();
+    loadChampionCatalog();
+
+    document.getElementById("saveSummary").addEventListener("click", () => {
+      state.summary = readSummaryInputs();
+      saveState();
+      renderSummary();
+    });
+
+    document.getElementById("loadVideo").addEventListener("click", loadVideoFromInput);
+    youtubeUrlInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        loadVideoFromInput();
+      }
+    });
+
+    document.getElementById("captureNow").addEventListener("click", () => {
+      noteTimestampTouched = false;
+      noteTimestamp.value = formatTime(currentTime);
+    });
+
+    noteTimestamp.addEventListener("input", () => {
+      noteTimestampTouched = true;
+    });
+
+    championToggle.addEventListener("click", () => toggleSearchSelect("champion"));
+    matchupToggle.addEventListener("click", () => toggleSearchSelect("matchup"));
+
+    summaryFields.champion.addEventListener("focus", () => openSearchSelect("champion"));
+    summaryFields.matchup.addEventListener("focus", () => openSearchSelect("matchup"));
+    summaryFields.champion.addEventListener("input", () => filterChampionOptions("champion"));
+    summaryFields.matchup.addEventListener("input", () => filterChampionOptions("matchup"));
+
+    document.addEventListener("click", (event) => {
+      if (!championSelect.contains(event.target)) {
+        closeSearchSelect("champion");
+      }
+      if (!matchupSelect.contains(event.target)) {
+        closeSearchSelect("matchup");
+      }
+    });
+
+    [categorySelect, noteTitle, noteTag, noteDescription].forEach((field) => {
+      field.addEventListener("focus", () => {
+        if (!noteTimestampTouched) {
+          noteTimestamp.value = formatTime(currentTime);
+        }
+        pauseVideo();
+      });
+      field.addEventListener("input", () => {
+        if (!noteTimestampTouched) {
+          noteTimestamp.value = formatTime(currentTime);
+        }
+        pauseVideo();
+      });
+    });
+
+    document.getElementById("addNote").addEventListener("click", () => {
+      hideError();
+
+      const title = noteTitle.value.trim();
+      const description = noteDescription.value.trim();
+      const tag = noteTag.value.trim();
+      const timestampText = noteTimestamp.value.trim();
+      const seconds = parseTimeToSeconds(timestampText);
+
+      if (!title || !description || Number.isNaN(seconds)) {
+        showError("Completa título, descripción y un timestamp válido con formato mm:ss o hh:mm:ss.");
+        return;
+      }
+
+      const newNote = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        category: categorySelect.value,
+        timestamp: seconds,
+        title,
+        tag: tag || "Sin categorizar",
+        description,
+      };
+
+      state.notes.push(newNote);
+      state.notes.sort((a, b) => a.timestamp - b.timestamp);
+      saveState();
+      renderAll();
+
+      noteTitle.value = "";
+      noteTag.value = "";
+      noteDescription.value = "";
+      noteTimestampTouched = false;
+      noteTimestamp.value = formatTime(currentTime);
+    });
+
+    timeline.addEventListener("click", (event) => {
+      const rect = timeline.getBoundingClientRect();
+      const percent = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      const targetTime = percent * (duration || fallbackDuration());
+      seekTo(targetTime);
+    });
+
+    Object.entries(summaryFields).forEach(([key, input]) => {
+      const persistSummary = () => {
+        state.summary = readSummaryInputs();
+        saveState();
+        renderSummary();
+        if (key === "sessionName") {
+          syncSessionPlaceholder();
+        }
+      };
+      input.addEventListener("change", persistSummary);
+      input.addEventListener("input", persistSummary);
+    });
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!saved) {
+          return structuredClone(defaultState);
+        }
+        return {
+          ...structuredClone(defaultState),
+          ...saved,
+          summary: {
+            ...defaultState.summary,
+            ...(saved.summary || {}),
+          },
+          notes: Array.isArray(saved.notes) ? saved.notes : defaultState.notes,
+        };
+      } catch (error) {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function syncInputsFromState() {
+      Object.entries(summaryFields).forEach(([key, input]) => {
+        input.value = state.summary[key] || "";
+      });
+      syncSessionPlaceholder();
+      youtubeUrlInput.value = state.youtubeUrl || "";
+      noteTimestampTouched = false;
+      noteTimestamp.value = formatTime(currentTime);
+    }
+
+    function readSummaryInputs() {
+      return {
+        champion: summaryFields.champion.value.trim(),
+        role: summaryFields.role.value.trim(),
+        matchup: summaryFields.matchup.value.trim(),
+        elo: summaryFields.elo.value.trim(),
+        sessionName: summaryFields.sessionName.value.trim(),
+      };
+    }
+
+    function seedSummaryOptions() {
+      seedSelect(summaryFields.role, roleOptions);
+      seedSelect(summaryFields.elo, eloOptions);
+    }
+
+    function seedSelect(select, values) {
+      values.forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    async function loadChampionCatalog() {
+      if (LOCAL_CHAMPION_OPTIONS.length) {
+        championCatalog = [...LOCAL_CHAMPION_OPTIONS];
+        championCatalogStatus = "ready";
+        renderChampionOptions("champion", championCatalog);
+        renderChampionOptions("matchup", championCatalog);
+        summaryFields.champion.placeholder = "Busca el campeón";
+        summaryFields.matchup.placeholder = "Busca o selecciona un campeón rival";
+        return;
+      }
+
+      try {
+        championCatalogStatus = "loading";
+        renderChampionOptions("champion", championCatalog);
+        renderChampionOptions("matchup", championCatalog);
+        const versionsResponse = await fetch(RIOT_VERSIONS_URL);
+        const versions = await versionsResponse.json();
+        const latestVersion = versions[0];
+        const championsResponse = await fetch(
+          `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/champion.json`
+        );
+        const championsPayload = await championsResponse.json();
+        championCatalog = Object.values(championsPayload.data)
+          .map((champion) => champion.name)
+          .sort((a, b) => a.localeCompare(b));
+        championCatalogStatus = "ready";
+
+        renderChampionOptions("champion", championCatalog);
+        renderChampionOptions("matchup", championCatalog);
+
+        summaryFields.champion.placeholder = "Busca el campeón";
+        summaryFields.matchup.placeholder = "Busca o selecciona un campeón rival";
+      } catch (error) {
+        championCatalog = [];
+        championCatalogStatus = "error";
+        renderChampionOptions("champion", []);
+        renderChampionOptions("matchup", []);
+        summaryFields.champion.placeholder = "Busca el campeón";
+        summaryFields.matchup.placeholder = "Busca o escribe un matchup";
+      }
+    }
+
+    function renderChampionOptions(type, champions) {
+      const listElement = type === "champion" ? championOptionsList : matchupOptionsList;
+      const field = type === "champion" ? summaryFields.champion : summaryFields.matchup;
+      const query = field.value.trim().toLowerCase();
+      const filtered = query
+        ? champions.filter((champion) => champion.toLowerCase().includes(query))
+        : champions;
+
+      listElement.innerHTML = "";
+
+      if (championCatalogStatus === "loading") {
+        const loading = document.createElement("div");
+        loading.className = "search-select-empty";
+        loading.textContent = "Cargando campeones...";
+        listElement.appendChild(loading);
+        return;
+      }
+
+      if (championCatalogStatus === "error") {
+        const error = document.createElement("div");
+        error.className = "search-select-empty";
+        error.textContent = "No se pudo cargar la lista. Puedes escribir el nombre manualmente.";
+        listElement.appendChild(error);
+        return;
+      }
+
+      if (!filtered.length) {
+        const empty = document.createElement("div");
+        empty.className = "search-select-empty";
+        empty.textContent = "No hay campeones que coincidan con la búsqueda.";
+        listElement.appendChild(empty);
+        return;
+      }
+
+      filtered.forEach((champion) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = `search-select-option${field.value === champion ? " active" : ""}`;
+        option.textContent = champion;
+        option.addEventListener("click", () => {
+          field.value = champion;
+          state.summary = readSummaryInputs();
+          saveState();
+          renderSummary();
+          closeSearchSelect(type);
+        });
+        listElement.appendChild(option);
+      });
+    }
+
+    function filterChampionOptions(type) {
+      renderChampionOptions(type, championCatalog);
+      openSearchSelect(type);
+    }
+
+    function openSearchSelect(type) {
+      const select = type === "champion" ? championSelect : matchupSelect;
+      select.classList.add("open");
+      renderChampionOptions(type, championCatalog);
+    }
+
+    function closeSearchSelect(type) {
+      const select = type === "champion" ? championSelect : matchupSelect;
+      select.classList.remove("open");
+    }
+
+    function toggleSearchSelect(type) {
+      const select = type === "champion" ? championSelect : matchupSelect;
+      if (select.classList.contains("open")) {
+        closeSearchSelect(type);
+      } else {
+        openSearchSelect(type);
+      }
+    }
+
+    function syncSessionPlaceholder() {
+      sessionNameWrap.classList.toggle("has-value", Boolean(summaryFields.sessionName.value.trim()));
+    }
+
+    function seedCategoryOptions() {
+      Object.entries(categories).forEach(([key, category]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = category.label;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    function renderAll() {
+      renderSummary();
+      renderFilters();
+      renderNotes();
+      renderTimeline();
+      renderLegend();
+      renderVideoHint();
+      updateCounts();
+      maybeLoadPersistedVideo();
+    }
+
+    function renderVideoHint() {
+      videoHint.textContent = FILE_MODE
+        ? "Modo archivo detectado: YouTube bloquea embeds desde file:// y devuelve error 153. Usa npm run serve y abre http://127.0.0.1:4173 para reproducir el vídeo dentro de ClimbLab."
+        : "Modo web detectado: intentaremos usar la API del player para sincronización completa.";
+    }
+
+    function renderSummary() {
+      const entries = [
+        ["Campeón", state.summary.champion || "Pendiente"],
+        ["Rol", state.summary.role || "Pendiente"],
+        ["Matchup", state.summary.matchup || "Pendiente"],
+        ["Elo", state.summary.elo || "Pendiente"],
+      ];
+
+      summaryGrid.innerHTML = "";
+      entries.forEach(([label, value]) => {
+        const card = document.createElement("article");
+        card.className = "summary-card";
+        card.innerHTML = `
+          <div class="summary-label">${label}</div>
+          <div class="summary-value">${escapeHtml(value)}</div>
+        `;
+        summaryGrid.appendChild(card);
+      });
+    }
+
+    function renderFilters() {
+      filters.innerHTML = "";
+
+      const allButton = createFilterButton("all", `Todas (${state.notes.length})`);
+      filters.appendChild(allButton);
+
+      Object.entries(categories).forEach(([key, category]) => {
+        const count = state.notes.filter((note) => note.category === key).length;
+        const button = createFilterButton(key, `${category.label} (${count})`, category.color, true);
+        filters.appendChild(button);
+      });
+    }
+
+    function createFilterButton(key, text, color, showDot = false) {
+      const button = document.createElement("button");
+      button.className = `chip${state.filter === key ? " active" : ""}`;
+      if (state.filter === key && color) {
+        button.style.boxShadow = `inset 0 0 0 1px ${color}`;
+      }
+      if (showDot && color) {
+        button.innerHTML = `<span class="dot" style="background:${color};"></span>${escapeHtml(text)}`;
+      } else {
+        button.textContent = text;
+      }
+      button.addEventListener("click", () => {
+        state.filter = key;
+        saveState();
+        renderFilters();
+        renderNotes();
+      });
+      return button;
+    }
+
+    function renderNotes() {
+      const visibleNotes =
+        state.filter === "all"
+          ? state.notes
+          : state.notes.filter((note) => note.category === state.filter);
+
+      notesList.innerHTML = "";
+
+      if (!visibleNotes.length) {
+        notesList.innerHTML = `
+          <div class="empty-state">
+            Esta review todavía no tiene notas. Añade un vídeo y empieza a marcar errores, aciertos, dudas o highlights.
+          </div>
+        `;
+        return;
+      }
+
+      visibleNotes.forEach((note) => {
+        const category = categories[note.category];
+        const isActive = Math.abs(currentTime - note.timestamp) < 6;
+        const article = document.createElement("article");
+        article.className = `note-card${isActive ? " active" : ""}`;
+        article.innerHTML = `
+          <div class="note-top">
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <div class="note-badge" style="background:${category.soft};">
+                <span class="dot" style="width:14px;height:14px;background:${category.color};"></span>
+              </div>
+              <div>
+                <div class="note-title">${escapeHtml(note.title)}</div>
+                <div class="note-timestamp">${formatTime(note.timestamp)} · ${escapeHtml(category.label)}</div>
+              </div>
+            </div>
+            <button class="button button-secondary button-small" data-action="delete">Eliminar</button>
+          </div>
+          <p class="note-description">${escapeHtml(note.description)}</p>
+          <div class="note-actions">
+            <span class="meta-pill">${escapeHtml(note.tag || "Sin tag")}</span>
+            <button class="button button-primary button-small" data-action="seek">Ir al momento</button>
+          </div>
+        `;
+
+        article.querySelector('[data-action="seek"]').addEventListener("click", () => seekTo(note.timestamp));
+        article.querySelector('[data-action="delete"]').addEventListener("click", () => {
+          state.notes = state.notes.filter((item) => item.id !== note.id);
+          saveState();
+          renderAll();
+        });
+
+        notesList.appendChild(article);
+      });
+    }
+
+    function renderLegend() {
+      legend.innerHTML = "";
+      Object.values(categories).forEach((category) => {
+        const item = document.createElement("span");
+        item.className = "legend-item";
+        item.innerHTML = `
+          <span class="legend-swatch" style="background:${category.color};"></span>
+          ${category.label}
+        `;
+        legend.appendChild(item);
+      });
+    }
+
+    function renderTimeline() {
+      const baseDuration = duration || fallbackDuration();
+      const percent = baseDuration ? clamp(currentTime / baseDuration, 0, 1) * 100 : 0;
+      timelineProgress.style.width = percent + "%";
+      timelineHead.style.left = percent + "%";
+      currentTimeLabel.textContent = formatTime(currentTime);
+      durationLabel.textContent = formatTime(baseDuration);
+
+      timelineMarkers.innerHTML = "";
+      state.notes.forEach((note) => {
+        const category = categories[note.category];
+        const marker = document.createElement("button");
+        marker.className = "marker";
+        marker.style.left = `${clamp(note.timestamp / baseDuration, 0, 1) * 100}%`;
+        marker.style.background = category.color;
+        marker.title = `${category.label} · ${formatTime(note.timestamp)} · ${note.title}`;
+        marker.addEventListener("click", (event) => {
+          event.stopPropagation();
+          seekTo(note.timestamp);
+        });
+        timelineMarkers.appendChild(marker);
+      });
+    }
+
+    function updateCounts() {
+      noteCount.textContent = `${state.notes.length} ${state.notes.length === 1 ? "nota" : "notas"}`;
+    }
+
+    function maybeLoadPersistedVideo() {
+      if (!state.videoId) {
+        return;
+      }
+
+      if (FILE_MODE) {
+        renderFileModeBlocked();
+      } else if (!player && window.YT && window.YT.Player) {
+        videoPlaceholder.style.display = "none";
+        instantiatePlayer(state.videoId);
+      }
+    }
+
+    function loadVideoFromInput() {
+      const url = youtubeUrlInput.value.trim();
+      const videoId = extractYoutubeId(url);
+
+      if (!videoId) {
+        showError("Introduce una URL válida de YouTube en formato youtube.com/watch?v=... o youtu.be/...");
+        return;
+      }
+
+      hideError();
+      state.youtubeUrl = url;
+      state.videoId = videoId;
+      saveState();
+
+      if (FILE_MODE) {
+        renderFileModeBlocked();
+      } else {
+        instantiatePlayer(videoId);
+        videoPlaceholder.style.display = "none";
+      }
+    }
+
+    function instantiatePlayer(videoId) {
+      if (!window.YT || !window.YT.Player) {
+        renderIframeEmbed(videoId, currentTime);
+        return;
+      }
+
+      embedMode = "api";
+      if (player && typeof player.destroy === "function") {
+        player.destroy();
+      }
+
+      playerReady = false;
+      player = new YT.Player("player", {
+        videoId,
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange,
+          onError: onPlayerError,
+        },
+      });
+    }
+
+    function onPlayerReady(event) {
+      playerReady = true;
+      duration = Math.floor(event.target.getDuration()) || fallbackDuration();
+      noteTimestamp.value = formatTime(currentTime);
+      hideError();
+      renderTimeline();
+    }
+
+    function onPlayerStateChange() {
+      if (!playerReady) {
+        return;
+      }
+      duration = Math.floor(player.getDuration()) || fallbackDuration();
+    }
+
+    function onPlayerError(event) {
+      const map = {
+        2: "La URL parece inválida.",
+        5: "Error del reproductor HTML5 de YouTube.",
+        100: "El vídeo no existe o es privado.",
+        101: "El propietario no permite embeber este vídeo.",
+        150: "El propietario ha bloqueado el embed del vídeo.",
+        153: "YouTube no acepta este modo de identificación. Activamos un embed compatible con archivo local.",
+      };
+      if (event.data === 153 && state.videoId) {
+        renderIframeEmbed(state.videoId, currentTime);
+        hideError();
+        return;
+      }
+      showError(map[event.data] || "No se pudo cargar el vídeo embebido.");
+      videoPlaceholder.style.display = "grid";
+    }
+
+    function seekTo(seconds) {
+      currentTime = seconds;
+      syncNoteTimestampWithCurrentTime();
+      renderTimeline();
+      renderNotes();
+      if (embedMode === "api" && player && typeof player.seekTo === "function") {
+        player.seekTo(seconds, true);
+        return;
+      }
+      if (embedMode === "iframe" && state.videoId) {
+        renderIframeEmbed(state.videoId, seconds);
+      }
+    }
+
+    function renderIframeEmbed(videoId, startSeconds) {
+      embedMode = "iframe";
+      playerReady = false;
+      duration = duration || fallbackDuration();
+      if (player && typeof player.destroy === "function") {
+        player.destroy();
+      }
+      player = null;
+      const start = Math.max(0, Math.floor(startSeconds || 0));
+      const src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&start=${start}`;
+      document.getElementById("player").innerHTML = `
+        <iframe
+          src="${src}"
+          title="ClimbLab YouTube embed"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+      `;
+      currentTime = start;
+      syncNoteTimestampWithCurrentTime();
+      renderTimeline();
+      renderNotes();
+      videoPlaceholder.style.display = "none";
+    }
+
+    function renderFileModeBlocked() {
+      embedMode = "file-blocked";
+      playerReady = false;
+      player = null;
+      document.getElementById("player").innerHTML = "";
+      videoPlaceholder.innerHTML = `
+        <div>
+          <strong>YouTube no puede reproducirse desde file://</strong>
+          Abre ClimbLab en <strong>http://127.0.0.1:4173</strong> con <strong>npm run serve</strong> para evitar el error 153 y mantener el vídeo dentro de la plataforma.
+        </div>
+      `;
+      videoPlaceholder.style.display = "grid";
+    }
+
+    function syncNoteTimestampWithCurrentTime() {
+      if (!noteTimestampTouched) {
+        noteTimestamp.value = formatTime(currentTime);
+      }
+    }
+
+    function pauseVideo() {
+      if (embedMode === "api" && player && typeof player.pauseVideo === "function") {
+        player.pauseVideo();
+      }
+    }
+
+    function extractYoutubeId(url) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname.includes("youtu.be")) {
+          return parsed.pathname.slice(1);
+        }
+        if (parsed.hostname.includes("youtube.com")) {
+          return parsed.searchParams.get("v");
+        }
+      } catch (error) {
+        return "";
+      }
+      return "";
+    }
+
+    function parseTimeToSeconds(value) {
+      const parts = value.split(":").map((part) => Number(part));
+      if (parts.some((part) => Number.isNaN(part))) {
+        return Number.NaN;
+      }
+      if (parts.length === 2) {
+        return parts[0] * 60 + parts[1];
+      }
+      if (parts.length === 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      }
+      return Number.NaN;
+    }
+
+    function formatTime(totalSeconds) {
+      const safe = Math.max(0, Math.floor(totalSeconds || 0));
+      const hours = Math.floor(safe / 3600);
+      const minutes = Math.floor((safe % 3600) / 60);
+      const seconds = safe % 60;
+
+      if (hours > 0) {
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function fallbackDuration() {
+      const noteMax = state.notes.reduce((max, note) => Math.max(max, note.timestamp), 0);
+      return Math.max(noteMax + 60, 900);
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+    }
+
+    function hideError() {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    window.onYouTubeIframeAPIReady = () => {
+      maybeLoadPersistedVideo();
+    };
+
+    if (!FILE_MODE && window.YT && window.YT.Player) {
+      maybeLoadPersistedVideo();
+    }
+
+    window.setInterval(() => {
+      if (embedMode !== "api" || !playerReady || !player || typeof player.getCurrentTime !== "function") {
+        return;
+      }
+
+      const nextTime = player.getCurrentTime();
+      if (Number.isFinite(nextTime)) {
+        currentTime = nextTime;
+        duration = Math.floor(player.getDuration()) || duration || fallbackDuration();
+        syncNoteTimestampWithCurrentTime();
+        renderTimeline();
+        renderNotes();
+      }
+    }, 250);
+  </script>
+</body>
+</html>
