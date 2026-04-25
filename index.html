@@ -191,6 +191,12 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
+    .ops-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 14px;
+    }
+
     .input-row {
       grid-template-columns: 1.2fr auto;
       align-items: end;
@@ -679,6 +685,36 @@
       line-height: 1.6;
     }
 
+    .status-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f8fafd);
+    }
+
+    .status-code {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: #f8fbff;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      min-height: 46px;
+    }
+
+    .status-message {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      min-height: 40px;
+    }
+
     .status-bar {
       margin-top: 16px;
       padding-top: 14px;
@@ -691,7 +727,8 @@
     @media (max-width: 1120px) {
       .layout,
       .session-grid,
-      .summary-grid {
+      .summary-grid,
+      .ops-grid {
         grid-template-columns: 1fr;
       }
 
@@ -842,6 +879,32 @@
           </div>
           <div class="summary-grid" id="summaryGrid"></div>
         </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Publicar e Importar VOD</h2>
+              <p class="panel-subtitle">Publica una sesión en archivos del repo y compártela con un código importable.</p>
+            </div>
+          </div>
+          <div class="ops-grid">
+            <div class="status-card">
+              <div class="field">
+                <label for="importCode">Código de VOD</label>
+                <input id="importCode" type="text" placeholder="Ej: VOD-AB12CD" autocomplete="off" />
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="publishVod" class="button button-primary button-small">Publicar sesión</button>
+                <button id="importVod" class="button button-secondary button-small">Importar por código</button>
+              </div>
+            </div>
+            <div class="status-card">
+              <div class="summary-label">Código publicado</div>
+              <div id="publishedCode" class="status-code">Sin publicar</div>
+              <div id="vodStatusMessage" class="status-message">Publica una sesión para generar su código y guardarla en el repositorio local.</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <aside class="stack">
@@ -977,6 +1040,10 @@
       videoId: "",
       youtubeUrl: "",
       filter: "all",
+      publication: {
+        code: "",
+        publishedAt: "",
+      },
       summary: {
         champion: "",
         role: "",
@@ -1015,6 +1082,11 @@
     const sessionPanel = document.getElementById("sessionPanel");
 
     const youtubeUrlInput = document.getElementById("youtubeUrl");
+    const importCodeInput = document.getElementById("importCode");
+    const publishVodButton = document.getElementById("publishVod");
+    const importVodButton = document.getElementById("importVod");
+    const publishedCode = document.getElementById("publishedCode");
+    const vodStatusMessage = document.getElementById("vodStatusMessage");
     const categorySelect = document.getElementById("noteCategory");
     const noteTimestamp = document.getElementById("noteTimestamp");
     const noteTitle = document.getElementById("noteTitle");
@@ -1053,6 +1125,14 @@
       renderSummary();
       sessionPanel.classList.add("collapsed");
       saveSummaryButton.textContent = "Editar contexto";
+    });
+
+    publishVodButton.addEventListener("click", publishCurrentVod);
+    importVodButton.addEventListener("click", importVodByCode);
+    importCodeInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        importVodByCode();
+      }
     });
 
     document.getElementById("loadVideo").addEventListener("click", loadVideoFromInput);
@@ -1167,6 +1247,10 @@
         return {
           ...structuredClone(defaultState),
           ...saved,
+          publication: {
+            ...defaultState.publication,
+            ...(saved.publication || {}),
+          },
           summary: {
             ...defaultState.summary,
             ...(saved.summary || {}),
@@ -1352,9 +1436,19 @@
       renderNotes();
       renderTimeline();
       renderLegend();
+      renderPublicationStatus();
       renderVideoHint();
       updateCounts();
       maybeLoadPersistedVideo();
+    }
+
+    function renderPublicationStatus(message) {
+      publishedCode.textContent = state.publication.code || "Sin publicar";
+      vodStatusMessage.textContent =
+        message ||
+        (state.publication.code
+          ? `Sesión publicada el ${formatDateTime(state.publication.publishedAt)}. Puedes compartir el código o volver a publicar para actualizar el archivo.`
+          : "Publica una sesión para generar su código y guardarla en el repositorio local.");
     }
 
     function renderVideoHint() {
@@ -1381,6 +1475,134 @@
         `;
         summaryGrid.appendChild(card);
       });
+    }
+
+    async function publishCurrentVod() {
+      hideError();
+
+      if (!state.youtubeUrl || !state.videoId) {
+        showError("Carga primero un vídeo de YouTube antes de publicar la sesión.");
+        return;
+      }
+
+      if (!state.summary.sessionName.trim()) {
+        showError("Añade un nombre de sesión antes de publicar el VOD.");
+        sessionPanel.classList.remove("collapsed");
+        saveSummaryButton.textContent = "Guardar contexto";
+        return;
+      }
+
+      publishVodButton.disabled = true;
+      publishVodButton.textContent = "Publicando...";
+      renderPublicationStatus("Guardando la sesión en archivos del repositorio...");
+
+      try {
+        const payload = buildVodPayload();
+        const response = await fetch("/api/vods", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo publicar el VOD.");
+        }
+
+        const result = await response.json();
+        state.publication = {
+          code: result.code,
+          publishedAt: result.publishedAt,
+        };
+        saveState();
+        importCodeInput.value = result.code;
+        renderPublicationStatus(`VOD publicado correctamente con el código ${result.code}. Archivo guardado en el repositorio local.`);
+      } catch (error) {
+        renderPublicationStatus("No se pudo publicar en el repositorio local. Asegúrate de estar usando `npm run serve`.");
+        showError("Error publicando la sesión. Usa el servidor local y vuelve a intentarlo.");
+      } finally {
+        publishVodButton.disabled = false;
+        publishVodButton.textContent = "Publicar sesión";
+      }
+    }
+
+    async function importVodByCode() {
+      hideError();
+      const code = importCodeInput.value.trim().toUpperCase();
+
+      if (!code) {
+        showError("Introduce un código de VOD para importar la sesión.");
+        return;
+      }
+
+      importVodButton.disabled = true;
+      importVodButton.textContent = "Importando...";
+      renderPublicationStatus(`Buscando el VOD ${code} en el repositorio local...`);
+
+      try {
+        const response = await fetch(`/api/vods/${encodeURIComponent(code)}`);
+        if (!response.ok) {
+          throw new Error("VOD no encontrado");
+        }
+        const vod = await response.json();
+        applyVodPayload(vod);
+        importCodeInput.value = code;
+        renderPublicationStatus(`VOD ${code} importado correctamente. La sesión actual ya muestra su vídeo, contexto y notas.`);
+      } catch (error) {
+        renderPublicationStatus(`No se encontró ninguna sesión publicada con el código ${code}.`);
+        showError(`No existe un VOD publicado con el código ${code}.`);
+      } finally {
+        importVodButton.disabled = false;
+        importVodButton.textContent = "Importar por código";
+      }
+    }
+
+    function buildVodPayload() {
+      return {
+        code: state.publication.code || "",
+        title: state.summary.sessionName || "Sesion sin nombre",
+        summary: {
+          ...state.summary,
+        },
+        video: {
+          youtubeUrl: state.youtubeUrl,
+          videoId: state.videoId,
+          duration: duration || fallbackDuration(),
+        },
+        notes: state.notes.map((note) => ({ ...note })),
+        publishedAt: new Date().toISOString(),
+        schemaVersion: 1,
+      };
+    }
+
+    function applyVodPayload(vod) {
+      state.summary = {
+        ...defaultState.summary,
+        ...(vod.summary || {}),
+      };
+      state.youtubeUrl = vod.video?.youtubeUrl || "";
+      state.videoId = vod.video?.videoId || "";
+      state.notes = Array.isArray(vod.notes) ? [...vod.notes].sort((a, b) => a.timestamp - b.timestamp) : [];
+      state.publication = {
+        code: vod.code || "",
+        publishedAt: vod.publishedAt || new Date().toISOString(),
+      };
+      state.filter = "all";
+      currentTime = 0;
+      duration = vod.video?.duration || fallbackDuration();
+      syncInputsFromState();
+      saveState();
+      renderAll();
+
+      if (state.videoId) {
+        if (FILE_MODE) {
+          renderFileModeBlocked();
+        } else {
+          instantiatePlayer(state.videoId);
+          videoPlaceholder.style.display = "none";
+        }
+      }
     }
 
     function renderFilters() {
@@ -1711,6 +1933,23 @@
       }
 
       return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) {
+        return "hace un momento";
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return "hace un momento";
+      }
+      return date.toLocaleString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
 
     function fallbackDuration() {

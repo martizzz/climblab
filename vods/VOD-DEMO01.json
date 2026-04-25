@@ -1,0 +1,36 @@
+{
+  "code": "VOD-DEMO01",
+  "title": "Demo review Ahri vs Orianna",
+  "summary": {
+    "champion": "Ahri",
+    "role": "Mid",
+    "matchup": "Orianna",
+    "elo": "Emerald II",
+    "sessionName": "Demo review Ahri vs Orianna"
+  },
+  "video": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+    "videoId": "M7lc1UVf-VE",
+    "duration": 1344
+  },
+  "notes": [
+    {
+      "id": "demo-note-1",
+      "category": "error",
+      "timestamp": 164,
+      "title": "Trade forzado sin info del jungla",
+      "tag": "Laning",
+      "description": "La wave está aceptable, pero falta confirmar visión antes de jugar agresivo. Se expone una ventana de castigo innecesaria."
+    },
+    {
+      "id": "demo-note-2",
+      "category": "highlight",
+      "timestamp": 522,
+      "title": "Buen reset antes del objetivo",
+      "tag": "Tempo",
+      "description": "El recall entra en una ventana muy limpia y permite llegar al setup del dragón con prioridad y recursos."
+    }
+  ],
+  "publishedAt": "2026-04-25T10:00:00.000Z",
+  "schemaVersion": 1
+}
